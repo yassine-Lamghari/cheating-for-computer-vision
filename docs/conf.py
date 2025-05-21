@@ -6,9 +6,9 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'cheating for computer vision'
-copyright = '2025, Yassine Lamghari'
-author = 'Yassine Lamghari'
+project = 'cheating-for-computer-vision'
+copyright = '2025, yassine lamghari'
+author = 'yassine lamghari'
 release = '1.0'
 
 # -- General configuration ---------------------------------------------------
@@ -17,7 +17,7 @@ release = '1.0'
 extensions = []
 
 templates_path = ['_templates']
-exclude_patterns = []
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 language = 'fr'
 
