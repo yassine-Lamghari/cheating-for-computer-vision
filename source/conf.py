@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'cheating-for-computer-vision'
+project = 'cheating for computer vision'
 copyright = '2025, Yassine Lamghari'
 author = 'Yassine Lamghari'
 release = '1.0'
