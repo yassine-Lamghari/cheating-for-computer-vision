@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Résultats de Détection</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🔍 Résultats de l'Analyse</h1>
+        <a href="{{ url_for('index') }}" class="back-button"
+          >← Nouvelle analyse</a
+        >
+      </header>
+
+      <div class="results-container">
+        <div class="images-comparison">
+          <div class="image-box">
+            <h3>Image originale</h3>
+            <img
+              src="{{ url_for('static', filename='uploads/' + original) }}"
+              alt="Image originale"
+            />
+          </div>
+          <div class="image-box">
+            <h3>Détections</h3>
+            <img
+              src="{{ url_for('static', filename='uploads/' + result) }}"
+              alt="Résultats de détection"
+            />
+          </div>
+        </div>
+
+        <div class="detections-list">
+          <h2>Objets détectés</h2>
+          <div class="detections-grid">
+            {% for detection in detections %}
+            <div
+              class="detection-card {% if detection.alert %}alert{% endif %}"
+            >
+              <h3>{{ detection.label }}</h3>
+              <p>Confiance: {{ detection.confidence }}</p>
+              {% if detection.alert %}
+              <div class="alert-badge">ALERTE</div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <audio
+      id="alert-sound"
+      src="{{ url_for('static', filename='sounds/alert.mp3') }}"
+      preload="auto"
+    ></audio>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+      // Jouer le son d'alerte si des comportements suspects sont détectés
+      document.addEventListener("DOMContentLoaded", function () {
+        const alertCards = document.querySelectorAll(".detection-card.alert");
+        const alertSound = document.getElementById("alert-sound");
+
+        if (alertCards.length > 0) {
+          alertSound.play();
+
+          // Clignoter les cartes d'alerte
+          alertCards.forEach((card) => {
+            let blinkCount = 0;
+            const maxBlinks = 6;
+            const blinkInterval = setInterval(() => {
+              card.style.borderColor =
+                blinkCount % 2 === 0 ? "#e74c3c" : "#f5f7fa";
+              blinkCount++;
+              if (blinkCount >= maxBlinks * 2) {
+                clearInterval(blinkInterval);
+                card.style.borderColor = "#e74c3c";
+              }
+            }, 300);
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

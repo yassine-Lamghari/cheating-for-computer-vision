@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Surveillance Examens</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      .alert-pulse {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+      }
+      #video-container {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <div class="min-h-screen">
+      <!-- Header -->
+      <header class="bg-blue-900 text-white py-6 shadow-lg">
+        <div class="container mx-auto px-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h1 class="text-3xl font-bold">
+                <i class="fas fa-eye mr-2"></i> ExamGuard Pro
+              </h1>
+              <p class="text-blue-200">
+                Système intelligent de surveillance d'examens
+              </p>
+            </div>
+            <div class="flex space-x-4">
+              <button
+                id="camera-btn"
+                class="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded-lg transition"
+              >
+                <i class="fas fa-video mr-2"></i> Activer Caméra
+              </button>
+              <button
+                class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg transition"
+              >
+                <i class="fas fa-bell mr-2"></i> Alertes
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Video Feed -->
+          <div class="lg:col-span-2">
+            <div
+              id="video-container"
+              class="rounded-xl overflow-hidden shadow-2xl relative"
+            >
+              <img
+                id="static-placeholder"
+                src="https://via.placeholder.com/800x450?text=Activer+la+caméra"
+                class="w-full h-auto"
+                alt="Camera Preview"
+              />
+              <img
+                id="video-feed"
+                src=""
+                class="hidden w-full h-auto"
+                alt="Live Feed"
+              />
+
+              <!-- Alert Overlay -->
+              <div
+                id="alert-overlay"
+                class="absolute inset-0 bg-red-500 bg-opacity-50 hidden flex items-center justify-center"
+              >
+                <div class="text-center p-6 bg-white rounded-lg shadow-xl">
+                  <i
+                    class="fas fa-exclamation-triangle text-red-500 text-5xl mb-4"
+                  ></i>
+                  <h2 class="text-2xl font-bold text-gray-800">
+                    TRICHE DÉTECTÉE !
+                  </h2>
+                  <p class="text-gray-600 mt-2">
+                    Comportement suspect identifié
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="mt-4 flex space-x-4">
+              <div class="flex-1">
+                <div class="relative">
+                  <input
+                    type="file"
+                    id="file-upload"
+                    accept="image/*"
+                    class="hidden"
+                  />
+                  <label
+                    for="file-upload"
+                    class="block w-full bg-blue-600 hover:bg-blue-500 text-white py-3 px-4 rounded-lg text-center cursor-pointer transition"
+                  >
+                    <i class="fas fa-upload mr-2"></i> Analyser une image
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detection Panel -->
+          <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <i class="fas fa-list-alt mr-2 text-blue-600"></i> Détections
+              récentes
+            </h2>
+
+            <div class="space-y-4">
+              <!-- Alert Status -->
+              <div id="alert-status" class="hidden">
+                <div class="bg-red-100 border-l-4 border-red-500 p-4">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                      <i
+                        class="fas fa-exclamation-circle text-red-500 text-xl"
+                      ></i>
+                    </div>
+                    <div class="ml-3">
+                      <p class="text-sm text-red-700">
+                        Comportement suspect détecté!
+                        <span id="alert-type" class="font-semibold"
+                          >Smartphone</span
+                        >
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <audio
+                  id="alert-sound"
+                  src="/static/sounds/alert.mp3"
+                  preload="auto"
+                ></audio>
+              </div>
+
+              <!-- Detection Results -->
+              <div id="detection-results" class="space-y-3">
+                <div class="text-center py-8 text-gray-400">
+                  <i class="fas fa-search fa-2x mb-2"></i>
+                  <p>Aucune détection pour le moment</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(document).ready(function () {
+        const alertSound = document.getElementById("alert-sound");
+        let alertCheckInterval;
+
+        // Camera Control
+        $("#camera-btn").click(function () {
+          const isActive = $(this).hasClass("bg-green-600");
+
+          $.post("/control_camera", function (data) {
+            if (data.status) {
+              $("#static-placeholder").addClass("hidden");
+              $("#video-feed").removeClass("hidden").attr("src", "/video_feed");
+              $("#camera-btn")
+                .removeClass("bg-blue-700")
+                .addClass("bg-green-600")
+                .html('<i class="fas fa-video-slash mr-2"></i> Désactiver');
+
+              // Start checking for alerts
+              alertCheckInterval = setInterval(checkForAlerts, 1000);
+            } else {
+              $("#video-feed").addClass("hidden");
+              $("#static-placeholder").removeClass("hidden");
+              $("#camera-btn")
+                .removeClass("bg-green-600")
+                .addClass("bg-blue-700")
+                .html('<i class="fas fa-video mr-2"></i> Activer Caméra');
+
+              clearInterval(alertCheckInterval);
+              $("#alert-overlay").addClass("hidden");
+            }
+          });
+        });
+
+        // File Upload
+        $("#file-upload").change(function () {
+          if (this.files.length > 0) {
+            const formData = new FormData();
+            formData.append("file", this.files[0]);
+
+            $.ajax({
+              url: "/upload",
+              type: "POST",
+              data: formData,
+              processData: false,
+              contentType: false,
+              success: function (data) {
+                displayDetectionResult(data);
+              },
+            });
+          }
+        });
+
+        function checkForAlerts() {
+          $.get("/detect_alert", function (data) {
+            if (data.alert) {
+              triggerAlert();
+            } else {
+              $("#alert-overlay").addClass("hidden");
+            }
+          });
+        }
+
+        function triggerAlert() {
+          $("#alert-overlay").removeClass("hidden");
+          $("#alert-status").removeClass("hidden");
+
+          // Play sound (with user interaction fallback)
+          if (alertSound.paused) {
+            alertSound.play().catch((e) => {
+              console.log("Audio play prevented:", e);
+              // Fallback: require user interaction
+              $("body").one("click", function () {
+                alertSound.play();
+              });
+            });
+          }
+
+          // Add to detection history
+          const alertTime = new Date().toLocaleTimeString();
+          $("#detection-results").prepend(`
+                    <div class="bg-red-50 p-3 rounded-lg border border-red-200">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="font-semibold text-red-600">Smartphone détecté</span>
+                                <p class="text-xs text-gray-500">${alertTime}</p>
+                            </div>
+                            <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Alerte</span>
+                        </div>
+                    </div>
+                `);
+        }
+
+        function displayDetectionResult(data) {
+          const time = new Date().toLocaleTimeString();
+          const alertClass = data.alert
+            ? "bg-red-50 border-red-200"
+            : "bg-gray-50 border-gray-200";
+          const alertBadge = data.alert
+            ? '<span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded ml-2">Alerte</span>'
+            : "";
+
+          $("#detection-results").prepend(`
+                    <div class="${alertClass} p-3 rounded-lg border">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center">
+                                <span class="font-semibold">Image analysée</span>
+                                ${alertBadge}
+                            </div>
+                            <span class="text-xs text-gray-500">${time}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <img src="/static/uploads/${data.original}" class="rounded border" alt="Original">
+                                <p class="text-xs text-center mt-1">Originale</p>
+                            </div>
+                            <div>
+                                <img src="/static/uploads/${data.result}" class="rounded border" alt="Result">
+                                <p class="text-xs text-center mt-1">Analyse</p>
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+          if (data.alert) {
+            triggerAlert();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
